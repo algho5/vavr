@@ -44,18 +44,6 @@ pipeline {
                 jacoco buildOverBuild: true, changeBuildStatus: true, exclusionPattern: '**/*Test*.class,**/Equivalence.class'
             }
         }
-        stage('Deploy') {
-            when {
-                expression {
-                    currentBuild.result == 'SUCCESS' || currentBuild.result == null
-                }
-            }
-
-            steps {
-                mavenDeploy deployUser: env.MAVEN_DEPLOY_USER,
-                        deployPassword: env.MAVEN_DEPLOY_PASSWORD
-            }
-        }
     }
 
     post {
