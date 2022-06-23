@@ -29,8 +29,20 @@
     <vavr.version>0.10.4</vavr.version>
   </properties>
 
-  <dependencies>
+  <distributionManagement>
+    <repository>
+      <id>repo-jeroensteenbeeke-releases</id>
+      <name>repo-jeroensteenbeeke-releases</name>
+      <url>https://repo.jeroensteenbeeke.nl/artifactory/libs-release-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>repo-jeroensteenbeeke-snapshots</id>
+      <name>repo-jeroensteenbeeke-snapshots</name>
+      <url>https://repo.jeroensteenbeeke.nl/artifactory/libs-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
 
+  <dependencies>
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
