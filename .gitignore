@@ -1,0 +1,15 @@
+.project
+.classpath
+target
+.hg*
+.settings
+*.versionsBackup
+*.factorypath
+android/jaxrs-retrofit-generator/.factorypath
+dependency-reduced-pom.xml
+
+# IntelliJ
+*.iws
+*.iml
+.idea
+.DS_Store
