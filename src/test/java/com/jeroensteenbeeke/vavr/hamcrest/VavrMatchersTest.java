@@ -5,6 +5,8 @@ import io.vavr.control.Option;
 import io.vavr.control.Try;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+
 import static com.jeroensteenbeeke.vavr.hamcrest.VavrMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -77,6 +79,10 @@ public class VavrMatchersTest {
 		assertThat(Try.failure(new IllegalStateException()), isFailure(IllegalStateException.class));
 		assertThat(Try.failure(new IllegalArgumentException()), not(isFailure(IllegalStateException.class)));
 		assertThat(Try.success("S"), not(isFailure(IllegalStateException.class)));
+
+		assertThat(Try.failure(new IllegalArgumentException()), isFailure("Is a runtime exception", t -> t instanceof RuntimeException));
+		assertThat(Try.failure(new IOException()), not(isFailure("Is a runtime exception", t -> t instanceof RuntimeException)));
+		assertThat(Try.success("Great success!"), not(isFailure("Is a runtime exception", t -> t instanceof RuntimeException)));
 	}
 
 	@Test
