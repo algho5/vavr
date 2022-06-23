@@ -49,6 +49,7 @@
     <jetbrains.annotations.version>23.0.0</jetbrains.annotations.version>
     <junit.version>5.8.2</junit.version>
     <puppycrawl.checkstyle.version>9.0</puppycrawl.checkstyle.version>
+    <slf4j.version>1.7.36</slf4j.version>
     <vavr.version>0.10.4</vavr.version>
   </properties>
 
@@ -93,6 +94,12 @@
       <groupId>com.tngtech.archunit</groupId>
       <artifactId>archunit</artifactId>
       <version>${archunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
