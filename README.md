@@ -2,13 +2,36 @@ vavr-hamcrest
 =============
 
 [![License](https://img.shields.io/github/license/jsteenbeeke/vavr-hamcrest)](http://www.gnu.org/licenses/lgpl-3.0.html)
-
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.jeroensteenbeeke.vavr/vavr-hamcrest/badge.svg?style=flat-square)](http://search.maven.org/#search|gav|1|g:"com.jeroensteenbeeke.vavr"%20AND%20a:"vavr-hamcrest")
 
 A set of Hamcrest matchers to use with the [vavr](https://vavr.io) library.
 
+## Install
+
+Add the matchers as a test dependency to your project.
+
+#### Maven
+```xml
+<dependencies>
+	<dependency>
+		<groupId>com.jeroensteenbeeke.vavr</groupId>
+		<artifactId>vavr-hamcrest</artifactId>
+		<version>1.0</version>
+		<scope>test</scope>
+	</dependency>
+</dependencies>
+```
+
+#### Gradle
+```groovy
+dependencies {
+	testImplementation 'com.jeroensteenbeeke.vavr:vavr-hamcrest:1.0'
+}
+```
+
 ## Usage
 
-Using these matchers is no different from using other matchers.
+Using these matchers is no different from using other Hamcrest matchers.
 
 ```java
 
