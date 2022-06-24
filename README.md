@@ -16,7 +16,7 @@ Add the matchers as a test dependency to your project.
 	<dependency>
 		<groupId>com.jeroensteenbeeke.vavr</groupId>
 		<artifactId>vavr-hamcrest</artifactId>
-		<version>1.0</version>
+		<version>1.0.0</version>
 		<scope>test</scope>
 	</dependency>
 </dependencies>
@@ -25,7 +25,7 @@ Add the matchers as a test dependency to your project.
 #### Gradle
 ```groovy
 dependencies {
-	testImplementation 'com.jeroensteenbeeke.vavr:vavr-hamcrest:1.0'
+	testImplementation 'com.jeroensteenbeeke.vavr:vavr-hamcrest:1.0.0'
 }
 ```
 
