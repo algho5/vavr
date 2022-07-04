@@ -13,7 +13,11 @@ import java.util.function.Predicate;
 /**
  * Defines Hamcrest matchers for Vavr's Option, Either and Try
  */
-public class VavrMatchers {
+public final class VavrMatchers {
+	VavrMatchers() {
+		throw new UnsupportedOperationException();
+	}
+
 	// region Matchers for Option<T>
 
 	/**
@@ -75,7 +79,7 @@ public class VavrMatchers {
 				if (subject.isEmpty()) {
 					return true;
 				} else {
-					mismatchDescription.appendText("is an Option with value ").appendValue(subject.get());
+					mismatchDescription.appendText("is an Option with a value equal to ").appendValue(subject.get());
 				}
 
 				return false;
@@ -117,7 +121,7 @@ public class VavrMatchers {
 					if (value.equals(actualValue)) {
 						return true;
 					} else {
-						mismatchDescription.appendText("value is ").appendValue(actualValue);
+						mismatchDescription.appendText("is an Option with a value equal to ").appendValue(actualValue);
 					}
 				} else {
 					mismatchDescription.appendText("is an empty Option");
@@ -151,8 +155,8 @@ public class VavrMatchers {
 					if (predicate.test(subject.get())) {
 						return true;
 					} else {
-						mismatchDescription.appendText("value does not match ").appendValue(predicateDescription)
-								.appendText(", actual value: ").appendValue(subject.get());
+						mismatchDescription.appendText("is an Option with a value not matching ").appendValue(predicateDescription)
+								.appendText(", because the value is equal to ").appendValue(subject.get());
 					}
 				} else {
 					mismatchDescription.appendText("is an empty Option");
@@ -251,8 +255,8 @@ public class VavrMatchers {
 					if (predicate.test(actualValue)) {
 						return true;
 					} else {
-						mismatchDescription.appendText("is a left Either, not matching ")
-								.appendValue(predicateDescription).appendText(", value ").appendValue(actualValue);
+						mismatchDescription.appendText("is a left Either, with a value not matching ")
+								.appendValue(predicateDescription).appendText(", because the value is equal to ").appendValue(actualValue);
 					}
 				} else {
 					mismatchDescription.appendText("is a right Either, with value ").appendValue(subject.get());
@@ -263,7 +267,7 @@ public class VavrMatchers {
 
 			@Override
 			public void describeTo(Description description) {
-				description.appendText("is a left Either, matching ").appendValue(predicateDescription);
+				description.appendText("is a left Either, with a value matching ").appendValue(predicateDescription);
 			}
 		};
 	}
@@ -348,8 +352,8 @@ public class VavrMatchers {
 					if (predicate.test(actualValue)) {
 						return true;
 					} else {
-						mismatchDescription.appendText("is a right Either, not matching ")
-								.appendValue(predicateDescription).appendText(", value ").appendValue(actualValue);
+						mismatchDescription.appendText("is a right Either, with a value not matching ")
+								.appendValue(predicateDescription).appendText(", because the value is equal to ").appendValue(actualValue);
 					}
 				} else {
 					mismatchDescription.appendText("is a left Either, with value ").appendValue(subject.getLeft());
@@ -360,11 +364,11 @@ public class VavrMatchers {
 
 			@Override
 			public void describeTo(Description description) {
-				description.appendText("is a right Either, matching ").appendValue(predicateDescription);
+				description.appendText("is a right Either, with a value matching ").appendValue(predicateDescription);
 			}
 		};
 	}
-	// endregion<L,R>
+	// endregion
 
 	// region Matchers for Try<T>
 
@@ -449,7 +453,7 @@ public class VavrMatchers {
 						return true;
 					}
 
-					mismatchDescription.appendText("is a success, which does not match ").appendValue(predicateDescription).appendText(", value ")
+					mismatchDescription.appendText("is a success, which does not match ").appendValue(predicateDescription).appendText(", because the value is equal to ")
 							.appendValue(actualValue);
 				} else {
 					mismatchDescription.appendText("is a failure, with exception of type ")
@@ -561,6 +565,31 @@ public class VavrMatchers {
 				description.appendText("is a failure, with throwable matching ").appendValue(predicateDescription);
 			}
 		};
+	}
+
+	// endregion
+
+	// region Matchers for Future<T>
+
+	/**
+	 * Matches a future with any value
+	 * @return A matcher
+	 * @param <T> The type of object returned by the future
+	 */
+	@NotNull
+	public static <T> FutureMatcher<T> isFuture() {
+		return new FutureMatcher<>();
+	}
+
+	/**
+	 * Matches a future with the given value
+	 * @param expectedValue The expected value
+	 * @return A matcher
+	 * @param <T> The type of object returned by the future
+	 */
+	@NotNull
+	public static <T> FutureMatcher<T> isFuture(@NotNull T expectedValue) {
+		return new FutureMatcher<T>().withExpectedValue(expectedValue);
 	}
 
 	// endregion
