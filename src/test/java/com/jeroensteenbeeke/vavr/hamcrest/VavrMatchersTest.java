@@ -138,32 +138,45 @@ public class VavrMatchersTest {
 		assertThat(Future.of(() -> "A"), isFuture());
 		assertThat(Future.of(() -> "A"), isFuture("A"));
 		assertThat(Future.of(() -> "B"),
-				fails(isFuture("A")).withMismatchDescription("is a Future, that succeeds, with value \"B\""));
+				fails(VavrMatchers.<String>isFuture("A")).withMismatchDescription(
+						"is a Future, that succeeds, with value \"B\""));
 
-		assertThat(Future.of(() -> "A"), isFuture().withExpectedValue("A"));
+		assertThat(Future.of(() -> "A"), isFuture("A"));
 		assertThat(Future.of(() -> "A"),
-				fails(isFuture().thatFailsWith(IllegalStateException.class)).withMismatchDescription(
-						"is a Future, that succeeds"));
-		assertThat(Future.of(() -> "A"), isFuture().withExpectedValue("A").withTimeout(1, TimeUnit.SECONDS));
+				fails(VavrMatchers.<String>isFailedFuture(IllegalStateException.class)).withMismatchDescription(
+						"is a Future, that succeeds, and yields value \"A\""));
+		assertThat(Future.of(() -> "A"), isFuture("A").withTimeout(1, TimeUnit.SECONDS));
 		assertThat(Future.of(() -> {
 			Thread.sleep(1500);
 			return "A";
-		}), fails(isFuture().withExpectedValue("A").withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
+		}), fails(isFuture("A").withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
 				"is a Future, that fails by exceeding timeout"));
 		assertThat(Future.of(() -> {
 			throw new IllegalStateException();
-		}), isFuture().thatFailsWith(IllegalStateException.class));
+		}), isFailedFuture());
 		assertThat(Future.of(() -> {
 			throw new IllegalStateException();
-		}), fails(isFuture().thatFailsWith(IllegalArgumentException.class)).withMismatchDescription(
-				"is a Future, that fails, but threw exception of type \"java.lang.IllegalStateException\""));
+		}), isFailedFuture(IllegalStateException.class));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException();
+		}), fails(VavrMatchers.<String>isFailedFuture(IllegalArgumentException.class)).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\""));
 		assertThat(Future.of(() -> {
 			throw new IllegalStateException("Illegal State");
-		}), isFuture().thatFailsWith(IllegalStateException.class));
+		}), isFailedFuture(IllegalStateException.class));
 		assertThat(Future.of(() -> {
 			throw new IllegalStateException("Illegal State");
-		}), fails(isFuture().thatFailsWith(IllegalArgumentException.class)).withMismatchDescription(
-				"is a Future, that fails, but threw exception of type \"java.lang.IllegalStateException\", with message \"Illegal State\""));
+		}), isFailedFuture(IllegalStateException.class).withMessage("Illegal State"));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), fails(VavrMatchers.<String>isFailedFuture(IllegalArgumentException.class)).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"Illegal State\""));
+
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("IlLeGaL sTaTe");
+		}), fails(VavrMatchers.<String>isFailedFuture(IllegalArgumentException.class)
+				.withMessage("Illegal State")).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"IlLeGaL sTaTe\""));
 
 		assertThat(Future.of(() -> 5), fails(isFuture().withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription(
 				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
@@ -171,9 +184,83 @@ public class VavrMatchersTest {
 				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
 		assertThat(Future.of(() -> 5), isFuture().withTimeout(1, TimeUnit.SECONDS));
 
-		assertThat(new HackedFuture(), fails(VavrMatchers.<String>isFuture()
-				.thatFailsWith(IllegalStateException.class)).withMismatchDescription(
-				"is a Future, that fails, but has no defined failure cause"));
+		assertThat(Future.of(() -> 5), fails(VavrMatchers.<Integer>isFailedFuture()).withMismatchDescription(
+				"is a Future, that succeeds, and yields value <5>"));
+		assertThat(Future.of(() -> 5),
+				fails(VavrMatchers.<Integer>isFailedFuture().withTimeout(1L, TimeUnit.SECONDS)).withMismatchDescription(
+						"is a Future, that succeeds, and yields value <5>"));
+		assertThat(Future.of(() -> 5), fails(isFailedFuture(IllegalStateException.class).withTimeout(1,
+				TimeUnit.SECONDS)).withMismatchDescription(
+				"is a Future, that succeeds, and yields value <5>"));
+		assertThat(Future.of(() -> 5), fails(isFailedFuture(IllegalStateException.class).withMessage("This is an error")
+				.withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
+				"is a Future, that succeeds, and yields value <5>"));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("This is an error");
+		}), isFailedFuture(IllegalStateException.class).withMessage("This is an error")
+				.withTimeout(1, TimeUnit.SECONDS));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("This is an error");
+		}), fails(isFailedFuture(IllegalStateException.class).withMessage("This is not an error")
+				.withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"This is an error\""));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), isFailedFuture(IllegalStateException.class).withMessage("Illegal State").withTimeout(1, TimeUnit.SECONDS));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), fails(VavrMatchers.<String>isFuture()).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"Illegal State\""));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), fails(VavrMatchers.<String>isFuture("5")).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"Illegal State\""));
+
+		assertThat(new HackedFuture(),
+				fails(VavrMatchers.<String>isFailedFuture(IllegalStateException.class)).withMismatchDescription(
+						"is a Future, that fails, but has no defined failure cause"));
+
+		assertThat(new HackedFuture(),
+				VavrMatchers.<String>isFailedFuture());
+
+		assertThat(Future.of(() -> 5),
+				VavrMatchers.<Integer>isFutureMatching("Value greater than or equal to 5", v -> v >= 5)
+						.withTimeout(1L, TimeUnit.SECONDS));
+		assertThat(Future.of(() -> 5),
+				VavrMatchers.<Integer>isFutureMatching("Value greater than or equal to 5", v -> v >= 5));
+		assertThat(Future.of(() -> 4), fails(VavrMatchers.<Integer>isFutureMatching("Value greater than or equal to 5",
+				v -> v >= 5)).withMismatchDescription(
+				"is a Future, that succeeds, with value <4> not satisfying \"Value greater than or equal to 5\""));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), fails(VavrMatchers.<Integer>isFutureMatching("Value greater than or equal to 5",
+				v -> v >= 5)).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"Illegal State\""));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), VavrMatchers.<Integer>isFailedFutureMatching("Exception has message 'Illegal State'",
+				t -> "Illegal State".equals(t.getMessage())));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), VavrMatchers.<Integer>isFailedFutureMatching("Exception has message 'Illegal State'",
+				t -> "Illegal State".equals(t.getMessage())));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), fails(VavrMatchers.<Integer>isFailedFutureMatching("Exception does not have message 'Illegal State'",
+				t -> !"Illegal State".equals(t.getMessage()))).withMismatchDescription(
+				"is a Future, that fails, with exception not matching predicate \"Exception does not have message 'Illegal State'\""));
+
+		assertThat(Future.of(() -> 5),
+				fails(VavrMatchers.<Integer>isFailedFutureMatching("Exception does not have message 'Illegal State'",
+								t -> !"Illegal State".equals(t.getMessage()))
+						.withTimeout(5, TimeUnit.SECONDS)).withMismatchDescription(
+						"is a Future, that succeeds, and yields value <5>"));
+
+		assertThat(new HackedFuture(),
+				fails(VavrMatchers.<String>isFailedFutureMatching("Exception does not have message 'Illegal State'",
+								t -> !"Illegal State".equals(t.getMessage()))
+						.withTimeout(5, TimeUnit.SECONDS)).withMismatchDescription(
+						"is a Future, that fails, but has no defined failure cause"));
 	}
 
 
@@ -208,14 +295,29 @@ public class VavrMatchersTest {
 
 		assertThat(descriptionOf(isFuture()), equalTo("is a Future, that succeeds"));
 		assertThat(descriptionOf(isFuture().withTimeout(5, TimeUnit.SECONDS)),
-				equalTo("is a Future, that succeeds, that yields a responds within 5 seconds"));
-		assertThat(descriptionOf(isFuture().withExpectedValue("F")),
+				equalTo("is a Future, that completes within 5 seconds, that succeeds"));
+		assertThat(descriptionOf(VavrMatchers.<String>isFuture("F")),
 				equalTo("is a Future, that succeeds, with value \"F\""));
 		assertThat(descriptionOf(isFuture("F")), equalTo("is a Future, that succeeds, with value \"F\""));
-		assertThat(descriptionOf(isFuture().thatFailsWith(IllegalStateException.class)),
-				equalTo("is a Future, that fails, with exception of type \"java.lang.IllegalStateException\""));
 		assertThat(descriptionOf(isFuture("F").withTimeout(5, TimeUnit.SECONDS)),
-				equalTo("is a Future, that succeeds, with value \"F\", that yields a responds within 5 seconds"));
+				equalTo("is a Future, that completes within 5 seconds, that succeeds, with value \"F\""));
+		assertThat(descriptionOf(isFailedFuture()),
+				equalTo("is a Future, that fails"));
+		assertThat(descriptionOf(isFailedFuture(IllegalStateException.class)),
+				equalTo("is a Future, that fails, with exception of type \"java.lang.IllegalStateException\""));
+		assertThat(descriptionOf(isFailedFuture(IllegalStateException.class).withMessage("Illegal State")),
+				equalTo("is a Future, that fails, with exception of type \"java.lang.IllegalStateException\" and message \"Illegal State\""));
+		assertThat(descriptionOf(VavrMatchers.<Integer>isFutureMatching("greater than 5", v -> v > 5)),
+				equalTo("is a Future, that succeeds, with value matching predicate \"greater than 5\""));
+
+		assertThat(descriptionOf(VavrMatchers.<Integer>isFailedFutureMatching("IllegalStateException",
+						ex -> ex instanceof IllegalStateException)),
+				equalTo("is a Future, that fails, with exception matching predicate \"IllegalStateException\""));
+
+		assertThat(descriptionOf(isFuture().withTimeout(-1, TimeUnit.SECONDS)), equalTo("is a Future, that succeeds"));
+		assertThat(descriptionOf(isFuture().withTimeout(0, TimeUnit.SECONDS)), equalTo("is a Future, that succeeds"));
+		assertThat(descriptionOf(isFuture().withTimeout(1, TimeUnit.SECONDS)),
+				equalTo("is a Future, that completes within 1 seconds, that succeeds"));
 	}
 
 	private static <T> WithMismatchDescription<T> fails(TypeSafeDiagnosingMatcher<T> matcher) {

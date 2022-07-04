@@ -577,8 +577,8 @@ public final class VavrMatchers {
 	 * @param <T> The type of object returned by the future
 	 */
 	@NotNull
-	public static <T> FutureMatcher<T> isFuture() {
-		return new FutureMatcher<>();
+	public static <T> FutureMatcher<T,?> isFuture() {
+		return new FutureMatcher.Success<>();
 	}
 
 	/**
@@ -588,8 +588,54 @@ public final class VavrMatchers {
 	 * @param <T> The type of object returned by the future
 	 */
 	@NotNull
-	public static <T> FutureMatcher<T> isFuture(@NotNull T expectedValue) {
-		return new FutureMatcher<T>().withExpectedValue(expectedValue);
+	public static <T> FutureMatcher<T,?> isFuture(@NotNull T expectedValue) {
+		return new FutureMatcher.SuccessWithValue<>(expectedValue);
+	}
+
+	/**
+	 * Matches a future whose result matches the given predicate
+	 * @param predicateDescription A human-readable description of the predicate
+	 * @param predicate The predicate
+	 * @return A Hamcrest matcher
+	 * @param <T> The type of value returned by the future
+	 */
+	@NotNull
+	public static <T> FutureMatcher<T,?> isFutureMatching(@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
+		return new FutureMatcher.SuccessMatchingPredicate<>(predicateDescription, predicate);
+	}
+
+	/**
+	 * Matches a Future that fails
+	 * @return A Hamcrest matcher
+	 * @param <T> The type of value that would be returned by the future if it succeeded instead
+	 */
+	@NotNull
+	public static <T> FutureMatcher<T,?> isFailedFuture() {
+		return new FutureMatcher.Failure<>();
+
+	}
+
+	/**
+	 * Matches a Future that fails, due to the given exception type
+	 * @param expectedException The exception that we expect to cause the future to fail
+	 * @return A Hamcrest matcher
+	 * @param <T> The type of value that would be returned by the future if it succeeded instead
+	 */
+	@NotNull
+	public static <T> FutureMatcher.FailureOfType<T> isFailedFuture(@NotNull Class<? extends Throwable> expectedException) {
+		return new FutureMatcher.FailureOfType<>(expectedException);
+	}
+
+	/**
+	 * Matches a Future that fails, due to an exception matching the given predicate
+	 * @param predicateDescription A human-readable description of the predicate
+	 * @param throwablePredicate The predicate
+	 * @return A Hamcrest matcher
+	 * @param <T> The type of value that would have been returned by the Future if it had succeeded
+	 */
+	@NotNull
+	public static <T> FutureMatcher.FailureMatchingPredicate<T> isFailedFutureMatching(@NotNull String predicateDescription, @NotNull Predicate<Throwable> throwablePredicate) {
+		return new FutureMatcher.FailureMatchingPredicate<T>(predicateDescription, throwablePredicate);
 	}
 
 	// endregion
