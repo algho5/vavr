@@ -289,6 +289,7 @@ public class VavrMatchersTest {
 	}
 
 
+	@SuppressWarnings("ConstantConditions")
 	@Test
 	void testDescriptions() {
 		assertThat(descriptionOf(isNone()), equalTo("is an empty Option"));
@@ -326,6 +327,14 @@ public class VavrMatchersTest {
 		assertThat(descriptionOf(isFuture("F")), equalTo("is a Future, that succeeds, with value \"F\""));
 		assertThat(descriptionOf(isFuture("F").withTimeout(5, TimeUnit.SECONDS)),
 				equalTo("is a Future, that completes within 5 seconds, that succeeds, with value \"F\""));
+
+		assertThat(descriptionOf(isFuture().withTimeout(-1, TimeUnit.SECONDS)),
+				equalTo("is a Future, that succeeds"));
+		assertThat(descriptionOf(isFuture().withTimeout(-1, null)),
+				equalTo("is a Future, that succeeds"));
+		assertThat(descriptionOf(isFuture().withTimeout(1, null)),
+				equalTo("is a Future, that succeeds"));
+
 		assertThat(descriptionOf(isFailedFuture()),
 				equalTo("is a Future, that fails"));
 		assertThat(descriptionOf(isFailedFuture(IllegalStateException.class)),
@@ -352,6 +361,13 @@ public class VavrMatchersTest {
 		assertThat(descriptionOf(isLazy("5").withTimeout(-1, TimeUnit.SECONDS)), equalTo("is a Lazy, which yields value \"5\""));
 		assertThat(descriptionOf(isLazy("5").withTimeout(0, TimeUnit.SECONDS)), equalTo("is a Lazy, which yields value \"5\""));
 		assertThat(descriptionOf(isLazy("5").withTimeout(1, TimeUnit.SECONDS)), equalTo("is a Lazy, that completes within 1 seconds, which yields value \"5\""));
+
+		assertThat(descriptionOf(isLazy().withTimeout(-1, TimeUnit.SECONDS)),
+				equalTo("is a Lazy"));
+		assertThat(descriptionOf(isLazy().withTimeout(-1, null)),
+				equalTo("is a Lazy"));
+		assertThat(descriptionOf(isLazy().withTimeout(1, null)),
+				equalTo("is a Lazy"));
 
 	}
 
