@@ -6,7 +6,7 @@
 
   <groupId>com.jeroensteenbeeke.vavr</groupId>
   <artifactId>vavr-hamcrest</artifactId>
-  <version>1.1.0</version>
+  <version>1.2-SNAPSHOT</version>
 
   <name>vavr-hamcrest</name>
   <description>Hamcrest matchers for the vavr library. Provides matchers for Option, Either and Try</description>
