@@ -267,17 +267,25 @@ public class VavrMatchersTest {
 	@Test
 	void testLazyMatcher() {
 		assertThat(Lazy.of(() -> 5), isLazy());
-		assertThat(Lazy.of(() -> 5), fails(isLazy().withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription("invalid parameter timeoutAmount, must be positive, but is <-1L>"));
-		assertThat(Lazy.of(() -> 5), fails(isLazy().withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription("invalid parameter timeoutAmount, must be positive, but is <0L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy().withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy().withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
 		assertThat(Lazy.of(() -> 5), isLazy().withTimeout(1, TimeUnit.SECONDS));
 		assertThat(Lazy.of(() -> 5), isLazy(5));
-		assertThat(Lazy.of(() -> 5), fails(isLazy(5).withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription("invalid parameter timeoutAmount, must be positive, but is <-1L>"));
-		assertThat(Lazy.of(() -> 5), fails(isLazy(5).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription("invalid parameter timeoutAmount, must be positive, but is <0L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(5).withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(5).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
 		assertThat(Lazy.of(() -> 5), isLazy(5).withTimeout(1, TimeUnit.SECONDS));
-		assertThat(Lazy.of(() -> 5), fails(VavrMatchers.<Integer> isLazy(4)).withMismatchDescription("is a Lazy, which yields value <5>"));
-		assertThat(Lazy.of(() -> 5), fails(isLazy(4).withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription("invalid parameter timeoutAmount, must be positive, but is <-1L>"));
-		assertThat(Lazy.of(() -> 5), fails(isLazy(4).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription("invalid parameter timeoutAmount, must be positive, but is <0L>"));
-		assertThat(Lazy.of(() -> 5), fails(isLazy(4).withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription("is a Lazy, which yields value <5>"));
+		assertThat(Lazy.of(() -> 5),
+				fails(VavrMatchers.<Integer>isLazy(4)).withMismatchDescription("is a Lazy, which yields value <5>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(4).withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(4).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(4).withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
+				"is a Lazy, which yields value <5>"));
 		assertThat(Lazy.of(() -> {
 			try {
 				Thread.sleep(5000L);
@@ -285,7 +293,12 @@ public class VavrMatchersTest {
 				throw new RuntimeException(e);
 			}
 			return 4;
-		}), fails(isLazy(4).withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription("is a Lazy, that fails by exceeding timeout"));
+		}), fails(isLazy(4).withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
+				"is a Lazy, that fails by exceeding timeout"));
+
+		assertThat(Lazy.of(() -> 5), VavrMatchers. <Integer> isLazyMatching("== 5", v -> v == 5));
+		assertThat(Lazy.of(() -> 4), fails(VavrMatchers. <Integer> isLazyMatching("== 5", v -> v == 5)).withMismatchDescription("is a Lazy, which yields value <4>, which does not satisfy \"== 5\""));
+
 	}
 
 
@@ -357,10 +370,14 @@ public class VavrMatchersTest {
 		assertThat(descriptionOf(isLazy("5")), equalTo("is a Lazy, which yields value \"5\""));
 		assertThat(descriptionOf(isLazy().withTimeout(-1, TimeUnit.SECONDS)), equalTo("is a Lazy"));
 		assertThat(descriptionOf(isLazy().withTimeout(0, TimeUnit.SECONDS)), equalTo("is a Lazy"));
-		assertThat(descriptionOf(isLazy().withTimeout(1, TimeUnit.SECONDS)), equalTo("is a Lazy, that completes within 1 seconds"));
-		assertThat(descriptionOf(isLazy("5").withTimeout(-1, TimeUnit.SECONDS)), equalTo("is a Lazy, which yields value \"5\""));
-		assertThat(descriptionOf(isLazy("5").withTimeout(0, TimeUnit.SECONDS)), equalTo("is a Lazy, which yields value \"5\""));
-		assertThat(descriptionOf(isLazy("5").withTimeout(1, TimeUnit.SECONDS)), equalTo("is a Lazy, that completes within 1 seconds, which yields value \"5\""));
+		assertThat(descriptionOf(isLazy().withTimeout(1, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, that completes within 1 seconds"));
+		assertThat(descriptionOf(isLazy("5").withTimeout(-1, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, which yields value \"5\""));
+		assertThat(descriptionOf(isLazy("5").withTimeout(0, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, which yields value \"5\""));
+		assertThat(descriptionOf(isLazy("5").withTimeout(1, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, that completes within 1 seconds, which yields value \"5\""));
 
 		assertThat(descriptionOf(isLazy().withTimeout(-1, TimeUnit.SECONDS)),
 				equalTo("is a Lazy"));
@@ -368,6 +385,16 @@ public class VavrMatchersTest {
 				equalTo("is a Lazy"));
 		assertThat(descriptionOf(isLazy().withTimeout(1, null)),
 				equalTo("is a Lazy"));
+
+		assertThat(descriptionOf(
+						VavrMatchers.<Integer>isLazyMatching("greater than 5", v -> v > 5).withTimeout(-1, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, which satisfies \"greater than 5\""));
+		assertThat(
+				descriptionOf(VavrMatchers.<Integer>isLazyMatching("greater than 5", v -> v > 5).withTimeout(-1, null)),
+				equalTo("is a Lazy, which satisfies \"greater than 5\""));
+		assertThat(
+				descriptionOf(VavrMatchers.<Integer>isLazyMatching("greater than 5", v -> v > 5).withTimeout(1, null)),
+				equalTo("is a Lazy, which satisfies \"greater than 5\""));
 
 	}
 

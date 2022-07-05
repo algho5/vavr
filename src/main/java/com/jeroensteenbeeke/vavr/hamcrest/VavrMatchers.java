@@ -663,6 +663,19 @@ public final class VavrMatchers {
 		return new LazyMatcher.Valued<>(expectedValue);
 	}
 
+
+	/**
+	 * Matches a Lazy whose result matches the given predicate
+	 * @param predicateDescription A human-readable description of the predicate
+	 * @param predicate The predicate
+	 * @return A Hamcrest matcher
+	 * @param <T> The type of value returned by the Lazy
+	 */
+	@NotNull
+	public static <T> LazyMatcher<T,?> isLazyMatching(@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
+		return new LazyMatcher.MatchingPredicate<>(predicateDescription, predicate);
+	}
+
 	// endregion
 
 	// region Internal

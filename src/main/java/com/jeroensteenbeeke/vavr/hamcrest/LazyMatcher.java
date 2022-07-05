@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 /**
  * Matcher for Lazy objects that yields objects of the given type
@@ -138,7 +139,8 @@ public abstract class LazyMatcher<T, L extends LazyMatcher<T, L>> extends TypeSa
 	}
 
 	/**
-	 * Matcher that just checks if the return value is a Lazy, but does not verify contents
+	 * Matcher that just checks if the return value is a Lazy, and checks if the yielded
+	 * value is equal to a given value
 	 *
 	 * @param <T> The type of value yielded by the Lazy
 	 */
@@ -191,6 +193,57 @@ public abstract class LazyMatcher<T, L extends LazyMatcher<T, L>> extends TypeSa
 			super.describeTo(description);
 			description.appendText(", which yields value ");
 			description.appendValue(expectedValue);
+		}
+	}
+
+	/**
+	 * Matcher that just checks if the return value is a Lazy, and checks if the
+	 * value matches a given predicate
+	 *
+	 * @param <T> The type of value yielded by the Lazy
+	 */
+	public static class MatchingPredicate<T> extends LazyMatcher<T, MatchingPredicate<T>> {
+		private final String predicateDescription;
+
+		private final Predicate<T> valuePredicate;
+
+		MatchingPredicate(@NotNull String predicateDescription, @NotNull Predicate<T> valuePredicate) {
+			this(0L, null, predicateDescription, valuePredicate);
+		}
+
+		private MatchingPredicate(long timeoutAmount, @Nullable TimeUnit timeoutUnit, @NotNull String predicateDescription, @NotNull Predicate<T> valuePredicate) {
+			super(timeoutAmount, timeoutUnit);
+			this.predicateDescription = predicateDescription;
+			this.valuePredicate = valuePredicate;
+		}
+
+		@Override
+		@NotNull
+		protected MatchingPredicate<T> newInstance(long timeoutAmount, @Nullable TimeUnit timeoutUnit) {
+			return new MatchingPredicate<>(timeoutAmount, timeoutUnit, predicateDescription, valuePredicate);
+		}
+
+		@Override
+		protected boolean matchesLazySafely(@NotNull Lazy<T> lazy, @NotNull Description mismatchDescription) {
+			T actualValue = lazy.get();
+
+			if (valuePredicate.test(actualValue)) {
+				return true;
+			}
+
+			mismatchDescription.appendText(", which yields value ");
+			mismatchDescription.appendValue(actualValue);
+			mismatchDescription.appendText(", which does not satisfy ");
+			mismatchDescription.appendValue(predicateDescription);
+
+			return false;
+		}
+
+		@Override
+		public void describeTo(@NotNull Description description) {
+			super.describeTo(description);
+			description.appendText(", which satisfies ");
+			description.appendValue(predicateDescription);
 		}
 	}
 }
