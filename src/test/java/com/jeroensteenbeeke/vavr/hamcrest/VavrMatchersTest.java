@@ -225,7 +225,7 @@ public class VavrMatchersTest {
 				VavrMatchers.<String>isFailedFuture());
 
 		assertThat(Future.of(() -> 5),
-				VavrMatchers.<Integer>isFutureMatching("Value greater than or equal to 5", v -> v >= 5)
+				isFutureMatching("Value greater than or equal to 5", (Integer v) -> v >= 5)
 						.withTimeout(1L, TimeUnit.SECONDS));
 		assertThat(Future.of(() -> 5),
 				VavrMatchers.<Integer>isFutureMatching("Value greater than or equal to 5", v -> v >= 5));
