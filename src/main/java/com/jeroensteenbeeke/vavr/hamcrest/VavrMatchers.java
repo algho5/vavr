@@ -635,7 +635,32 @@ public final class VavrMatchers {
 	 */
 	@NotNull
 	public static <T> FutureMatcher.FailureMatchingPredicate<T> isFailedFutureMatching(@NotNull String predicateDescription, @NotNull Predicate<Throwable> throwablePredicate) {
-		return new FutureMatcher.FailureMatchingPredicate<T>(predicateDescription, throwablePredicate);
+		return new FutureMatcher.FailureMatchingPredicate<>(predicateDescription, throwablePredicate);
+	}
+
+	// endregion
+
+	// region Matchers for Lazy<T>
+
+	/**
+	 * Matches a Lazy that yields any value
+	 * @return A Hamcrest matcher
+	 * @param <T> The type of value returned by the lazy
+	 */
+	@NotNull
+	public static <T> LazyMatcher<T,?> isLazy() {
+		return new LazyMatcher.Bare<>();
+	}
+
+	/**
+	 * Matches a Lazy that yields any value
+	 * @param expectedValue The value the Lazy should yield
+	 * @return A Hamcrest matcher
+	 * @param <T> The type of value returned by the lazy
+	 */
+	@NotNull
+	public static <T> LazyMatcher<T,?> isLazy(@NotNull T expectedValue) {
+		return new LazyMatcher.Valued<>(expectedValue);
 	}
 
 	// endregion

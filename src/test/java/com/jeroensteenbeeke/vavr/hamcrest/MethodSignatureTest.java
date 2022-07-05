@@ -38,7 +38,10 @@ public class MethodSignatureTest {
 				FutureMatcher.FailureOfType.class,
 				FutureMatcher.Failure.class,
 				FutureMatcher.Success.class,
-				FutureMatcher.SuccessMatchingPredicate.class
+				FutureMatcher.SuccessMatchingPredicate.class,
+				LazyMatcher.class,
+				LazyMatcher.Bare.class,
+				LazyMatcher.Valued.class
 		);
 
 		for (Class<?> classToTest : classesToTest) {
