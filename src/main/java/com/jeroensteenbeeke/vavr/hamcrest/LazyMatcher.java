@@ -3,6 +3,7 @@ package com.jeroensteenbeeke.vavr.hamcrest;
 import io.vavr.Lazy;
 import io.vavr.concurrent.Future;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -197,6 +198,66 @@ public abstract class LazyMatcher<T, L extends LazyMatcher<T, L>> extends TypeSa
 	}
 
 	/**
+	 * Matcher that just checks if the return value is a Lazy, and checks if the yielded
+	 * value matches another matcher
+	 *
+	 * @param <T> The type of value yielded by the Lazy
+	 */
+	public static class Matching<T> extends LazyMatcher<T, Matching<T>> {
+		private final Matcher<T> matcher;
+
+		/**
+		 * Constructor
+		 *
+		 * @param matcher The matcher the value should adhere to
+		 */
+		public Matching(@NotNull Matcher<T> matcher) {
+			this(0L, null, matcher);
+		}
+
+		/**
+		 * Constructor
+		 *
+		 * @param timeoutAmount The amount of units to wait for a result
+		 * @param timeoutUnit   The type of units to wait for a result
+		 * @param matcher       The matcher the value should adhere to
+		 */
+		private Matching(long timeoutAmount, @Nullable TimeUnit timeoutUnit, @NotNull Matcher<T> matcher) {
+			super(timeoutAmount, timeoutUnit);
+			this.matcher = matcher;
+		}
+
+		@Override
+		@NotNull
+		protected Matching<T> newInstance(long timeoutAmount, @Nullable TimeUnit timeoutUnit) {
+			return new Matching<>(timeoutAmount, timeoutUnit, matcher);
+		}
+
+		@Override
+		protected boolean matchesLazySafely(@NotNull Lazy<T> lazy, @NotNull Description mismatchDescription) {
+			T actualValue = lazy.get();
+
+			if (matcher.matches(actualValue)) {
+				return true;
+			}
+
+			mismatchDescription.appendText(", which yields value ");
+			mismatchDescription.appendValue(actualValue)
+					.appendText(" not matching because ");
+			matcher.describeMismatch(actualValue, mismatchDescription);
+
+			return false;
+		}
+
+		@Override
+		public void describeTo(@NotNull Description description) {
+			super.describeTo(description);
+			description.appendText(", which yields value matching ");
+			matcher.describeTo(description);
+		}
+	}
+
+	/**
 	 * Matcher that just checks if the return value is a Lazy, and checks if the
 	 * value matches a given predicate
 	 *
@@ -211,7 +272,9 @@ public abstract class LazyMatcher<T, L extends LazyMatcher<T, L>> extends TypeSa
 			this(0L, null, predicateDescription, valuePredicate);
 		}
 
-		private MatchingPredicate(long timeoutAmount, @Nullable TimeUnit timeoutUnit, @NotNull String predicateDescription, @NotNull Predicate<T> valuePredicate) {
+		private MatchingPredicate(
+				long timeoutAmount, @Nullable TimeUnit timeoutUnit, @NotNull String predicateDescription,
+				@NotNull Predicate<T> valuePredicate) {
 			super(timeoutAmount, timeoutUnit);
 			this.predicateDescription = predicateDescription;
 			this.valuePredicate = valuePredicate;

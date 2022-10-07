@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static com.jeroensteenbeeke.vavr.hamcrest.VavrMatchers.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -38,16 +39,25 @@ public class VavrMatchersTest {
 		assertThat(Option.some("A"), isDefinedOption());
 		assertThat(Option.none(), fails(isDefinedOption()).withMismatchDescription("is an empty Option"));
 		assertThat(Option.some("A"), isDefinedOption("A"));
+		assertThat(Option.some("A"), isDefinedOption(equalTo("A")));
 		assertThat(Option.some("B"),
 				fails(isDefinedOption("A")).withMismatchDescription("is an Option with a value equal to \"B\""));
 		assertThat(Option.none(), fails(isDefinedOption("A")).withMismatchDescription("is an empty Option"));
 
 		assertThat(Option.some("A"), isSome());
 		assertThat(Option.none(), fails(isSome()).withMismatchDescription("is an empty Option"));
+		assertThat(Option.none(), fails(isSome(equalTo("A"))).withMismatchDescription("is an empty Option"));
 		assertThat(Option.some("A"), isSome("A"));
+		assertThat(Option.some("A"), isSome(equalTo("A")));
 		assertThat(Option.some("B"),
 				fails(isSome("A")).withMismatchDescription("is an Option with a value equal to \"B\""));
-		assertThat(Option.none(), fails(isSome("A")).withMismatchDescription("is an empty Option"));
+		assertThat(Option.some("B"),
+				fails(isSome(equalTo("A"))).withMismatchDescription(
+						"is an Option with value \"B\" not matching because was \"B\""));
+		assertThat(Option.none(), fails(isSome(equalTo("A"))).withMismatchDescription("is an empty Option"));
+		assertThat(Option.some("B"),
+				fails(isSome("A")).withMismatchDescription("is an Option with a value equal to \"B\""));
+		assertThat(Option.none(), fails(isSome(equalTo("A"))).withMismatchDescription("is an empty Option"));
 
 		assertThat(Option.some("A"),
 				isDefinedOption("contains only alphabetic letters", s -> s.matches("^[a-zA-Z]*$")));
@@ -65,10 +75,18 @@ public class VavrMatchersTest {
 				fails(isLeft()).withMismatchDescription("is a right Either, with value \"Error\""));
 
 		assertThat(Either.left("Error"), isLeft("Error"));
+		assertThat(Either.left("Error"), isLeft(equalTo("Error")));
 		assertThat(Either.left("ErRoR"),
 				fails(isLeft("Error")).withMismatchDescription("is a left Either, with value \"ErRoR\""));
+		assertThat(Either.left("ErRoR"),
+				fails(isLeft(equalTo("Error"))).withMismatchDescription(
+						"is a left Either, with value \"ErRoR\" not matching because was \"ErRoR\""));
 		assertThat(Either.right("Error"),
 				fails(isLeft("Error")).withMismatchDescription("is a right Either, with value \"Error\""));
+		assertThat(Either.right("Error"),
+				fails(isLeft(equalTo("Error"))).withMismatchDescription("is a right Either, with value \"Error\""));
+		assertThat(Either.right("Error"),
+				fails(isLeft(equalTo("Error"))).withMismatchDescription("is a right Either, with value \"Error\""));
 		assertThat(Either.left("Error"), isLeft("Starts with an E", s -> s.startsWith("E")));
 		assertThat(Either.left("Arror"),
 				fails(VavrMatchers.<String>isLeft("Starts with an E", s -> s.startsWith("E"))).withMismatchDescription(
@@ -82,10 +100,16 @@ public class VavrMatchersTest {
 				fails(isRight()).withMismatchDescription("is a left Either, with value \"Error\""));
 
 		assertThat(Either.right("Error"), isRight("Error"));
+		assertThat(Either.right("Error"), isRight(equalTo("Error")));
 		assertThat(Either.right("ErRoR"),
 				fails(isRight("Error")).withMismatchDescription("is a right Either, with value \"ErRoR\""));
+		assertThat(Either.right("ErRoR"),
+				fails(isRight(equalTo("Error"))).withMismatchDescription(
+						"is a right Either, with value \"ErRoR\" not matching because was \"ErRoR\""));
 		assertThat(Either.left("Error"),
 				fails(isRight("Error")).withMismatchDescription("is a left Either, with value \"Error\""));
+		assertThat(Either.left("Error"),
+				fails(isRight(equalTo("Error"))).withMismatchDescription("is a left Either, with value \"Error\""));
 		assertThat(Either.right("Error"), isRight("Starts with an E", s -> s.startsWith("E")));
 		assertThat(Either.right("Arror"),
 				fails(VavrMatchers.<String>isRight("Starts with an E", s -> s.startsWith("E"))).withMismatchDescription(
@@ -102,8 +126,13 @@ public class VavrMatchersTest {
 				"is a failure, with exception of type <class java.lang.RuntimeException>"));
 
 		assertThat(Try.success("S"), isSuccess("S"));
+		assertThat(Try.success("S"), isSuccess(equalTo("S")));
 		assertThat(Try.success("B"), fails(isSuccess("S")).withMismatchDescription("is a success, with value \"B\""));
 		assertThat(Try.failure(new RuntimeException()), fails(isSuccess("S")).withMismatchDescription(
+				"is a failure, with exception of type <class java.lang.RuntimeException>"));
+		assertThat(Try.success("B"), fails(isSuccess(equalTo("S"))).withMismatchDescription(
+				"is a success, with value \"B\" not matching because was \"B\""));
+		assertThat(Try.failure(new RuntimeException()), fails(isSuccess(equalTo("S"))).withMismatchDescription(
 				"is a failure, with exception of type <class java.lang.RuntimeException>"));
 
 		assertThat(Try.success("S"), isSuccess("Starts with an S", v -> v.startsWith("S")));
@@ -121,9 +150,13 @@ public class VavrMatchersTest {
 		assertThat(Try.failure(new IllegalArgumentException()),
 				fails(isFailure(IllegalStateException.class)).withMismatchDescription(
 						"is a failure, with exception of type \"java.lang.IllegalArgumentException\""));
+		assertThat(Try.failure(new IllegalArgumentException()),
+				fails(isFailure(instanceOf(IllegalStateException.class))).withMismatchDescription(
+						"is a failure, with exception of type \"java.lang.IllegalArgumentException\" not matching because <java.lang.IllegalArgumentException> is a java.lang.IllegalArgumentException"));
 		assertThat(Try.success("S"), fails(isFailure(IllegalStateException.class)).withMismatchDescription(
 				"is a success, with value \"S\""));
-
+		assertThat(Try.success("S"), fails(isFailure(instanceOf(IllegalStateException.class))).withMismatchDescription(
+				"is a success, with value \"S\""));
 		assertThat(Try.failure(new IllegalArgumentException()),
 				isFailure("Is a runtime exception", t -> t instanceof RuntimeException));
 		assertThat(Try.failure(new IOException()),
@@ -138,9 +171,13 @@ public class VavrMatchersTest {
 	void testFutureMatchers() {
 		assertThat(Future.of(() -> "A"), isFuture());
 		assertThat(Future.of(() -> "A"), isFuture("A"));
+		assertThat(Future.of(() -> "A"), isFuture(equalTo("A")));
 		assertThat(Future.of(() -> "B"),
 				fails(VavrMatchers.<String>isFuture("A")).withMismatchDescription(
 						"is a Future, that succeeds, with value \"B\""));
+		assertThat(Future.of(() -> "B"),
+				fails(VavrMatchers.<String>isFuture(equalTo("A"))).withMismatchDescription(
+						"is a Future, that succeeds, with value \"B\" not matching because was \"B\""));
 
 		assertThat(Future.of(() -> "A"), isFuture("A"));
 		assertThat(Future.of(() -> "A"),
@@ -172,6 +209,10 @@ public class VavrMatchersTest {
 			throw new IllegalStateException("Illegal State");
 		}), fails(VavrMatchers.<String>isFailedFuture(IllegalArgumentException.class)).withMismatchDescription(
 				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"Illegal State\""));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("Illegal State");
+		}), fails(VavrMatchers.<String>isFuture(equalTo("B"))).withMismatchDescription(
+				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"Illegal State\""));
 
 		assertThat(Future.of(() -> {
 			throw new IllegalStateException("IlLeGaL sTaTe");
@@ -202,6 +243,18 @@ public class VavrMatchersTest {
 				.withTimeout(1, TimeUnit.SECONDS));
 		assertThat(Future.of(() -> {
 			throw new IllegalStateException("This is an error");
+		}), isFailedFuture(instanceOf(IllegalStateException.class))
+				.withTimeout(1, TimeUnit.SECONDS));
+		assertThat(Future.of(() -> 5), fails(isFailedFuture(instanceOf(IllegalStateException.class))
+				.withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription("is a Future, that succeeds, and yields value <5>"));
+		assertThat(Future.of(() -> 5), fails(isFailedFuture(instanceOf(IllegalStateException.class))
+				.withTimeout(2, TimeUnit.SECONDS)).withMismatchDescription("is a Future, that succeeds, and yields value <5>"));
+		assertThat(Future.of(() -> {
+			throw new IllegalArgumentException("This is an error");
+		}), fails(isFailedFuture(instanceOf(IllegalStateException.class))
+				.withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription("is a Future, that fails, with exception of type \"java.lang.IllegalArgumentException\", with message \"This is an error\", that fails, because <java.lang.IllegalArgumentException: This is an error> is a java.lang.IllegalArgumentException"));
+		assertThat(Future.of(() -> {
+			throw new IllegalStateException("This is an error");
 		}), fails(isFailedFuture(IllegalStateException.class).withMessage("This is not an error")
 				.withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
 				"is a Future, that fails, with exception of type \"java.lang.IllegalStateException\", with message \"This is an error\""));
@@ -219,6 +272,10 @@ public class VavrMatchersTest {
 
 		assertThat(new HackedFuture(),
 				fails(VavrMatchers.<String>isFailedFuture(IllegalStateException.class)).withMismatchDescription(
+						"is a Future, that fails, but has no defined failure cause"));
+
+		assertThat(new HackedFuture(),
+				fails(VavrMatchers.<String>isFailedFuture(instanceOf(IllegalStateException.class))).withMismatchDescription(
 						"is a Future, that fails, but has no defined failure cause"));
 
 		assertThat(new HackedFuture(),
@@ -277,6 +334,15 @@ public class VavrMatchersTest {
 				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
 		assertThat(Lazy.of(() -> 5), fails(isLazy(5).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription(
 				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
+		assertThat(Lazy.of(() -> 5), isLazy(equalTo(5)).withTimeout(1, TimeUnit.SECONDS));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(equalTo(5)).withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(equalTo(5)).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(equalTo(5)).withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(equalTo(5)).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
 		assertThat(Lazy.of(() -> 5), isLazy(5).withTimeout(1, TimeUnit.SECONDS));
 		assertThat(Lazy.of(() -> 5),
 				fails(VavrMatchers.<Integer>isLazy(4)).withMismatchDescription("is a Lazy, which yields value <5>"));
@@ -286,6 +352,16 @@ public class VavrMatchersTest {
 				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
 		assertThat(Lazy.of(() -> 5), fails(isLazy(4).withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
 				"is a Lazy, which yields value <5>"));
+		assertThat(Lazy.of(() -> 5),
+				fails(VavrMatchers.<Integer>isLazy(equalTo(4))).withMismatchDescription("is a Lazy, which yields value <5> not matching because was <5>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(equalTo(4)).withTimeout(-1, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <-1L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(equalTo(4)).withTimeout(0, TimeUnit.SECONDS)).withMismatchDescription(
+				"invalid parameter timeoutAmount, must be positive, but is <0L>"));
+		assertThat(Lazy.of(() -> 5), fails(isLazy(equalTo(4)).withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
+				"is a Lazy, which yields value <5> not matching because was <5>"));
+
+
 		assertThat(Lazy.of(() -> {
 			try {
 				Thread.sleep(5000L);
@@ -296,8 +372,10 @@ public class VavrMatchersTest {
 		}), fails(isLazy(4).withTimeout(1, TimeUnit.SECONDS)).withMismatchDescription(
 				"is a Lazy, that fails by exceeding timeout"));
 
-		assertThat(Lazy.of(() -> 5), VavrMatchers. <Integer> isLazyMatching("== 5", v -> v == 5));
-		assertThat(Lazy.of(() -> 4), fails(VavrMatchers. <Integer> isLazyMatching("== 5", v -> v == 5)).withMismatchDescription("is a Lazy, which yields value <4>, which does not satisfy \"== 5\""));
+		assertThat(Lazy.of(() -> 5), VavrMatchers.<Integer>isLazyMatching("== 5", v -> v == 5));
+		assertThat(Lazy.of(() -> 4),
+				fails(VavrMatchers.<Integer>isLazyMatching("== 5", v -> v == 5)).withMismatchDescription(
+						"is a Lazy, which yields value <4>, which does not satisfy \"== 5\""));
 
 	}
 
@@ -311,24 +389,31 @@ public class VavrMatchersTest {
 		assertThat(descriptionOf(isDefinedOption()), equalTo("is an Option with a value"));
 		assertThat(descriptionOf(isSome("A")), equalTo("is an Option with a value equal to \"A\""));
 		assertThat(descriptionOf(isDefinedOption("A")), equalTo("is an Option with a value equal to \"A\""));
+		assertThat(descriptionOf(isSome(equalTo("A"))), equalTo("is an Option with a value matching \"A\""));
+		assertThat(descriptionOf(isDefinedOption(equalTo("A"))), equalTo("is an Option with a value matching \"A\""));
 		assertThat(descriptionOf(isDefinedOption("A", v -> true)), equalTo("is an Option with a value matching \"A\""));
 
 		assertThat(descriptionOf(isLeft()), equalTo("is a left Either"));
 		assertThat(descriptionOf(isLeft("L")), equalTo("is a left Either, with value \"L\""));
+		assertThat(descriptionOf(isLeft(equalTo("L"))), equalTo("is a left Either, matching \"L\""));
 		assertThat(descriptionOf(isLeft("L", v -> true)), equalTo("is a left Either, with a value matching \"L\""));
 		assertThat(descriptionOf(isRight()), equalTo("is a right Either"));
 		assertThat(descriptionOf(isRight("R")), equalTo("is a right Either, with value \"R\""));
+		assertThat(descriptionOf(isRight(equalTo("R"))), equalTo("is a right Either, matching \"R\""));
 		assertThat(descriptionOf(isRight("Predicate", v -> true)),
 				equalTo("is a right Either, with a value matching \"Predicate\""));
 
 		assertThat(descriptionOf(isSuccess()), equalTo("is a success"));
 		assertThat(descriptionOf(isSuccess("S")), equalTo("is a success, with value \"S\""));
+		assertThat(descriptionOf(isSuccess(equalTo("S"))), equalTo("is a success, matching \"S\""));
 		assertThat(descriptionOf(VavrMatchers.<String>isSuccess("Starts with an S", v -> v.startsWith("S"))),
 				equalTo("is a success, matching \"Starts with an S\""));
 
 		assertThat(descriptionOf(isFailure()), equalTo("is a failure"));
 		assertThat(descriptionOf(isFailure(IllegalStateException.class)),
 				equalTo("is a failure, with exception of type \"java.lang.IllegalStateException\""));
+		assertThat(descriptionOf(isFailure(instanceOf(IllegalStateException.class))),
+				equalTo("is a failure, matching an instance of java.lang.IllegalStateException"));
 		assertThat(descriptionOf(isFailure("Is a runtime exception", t -> t instanceof RuntimeException)),
 				equalTo("is a failure, with throwable matching \"Is a runtime exception\""));
 
@@ -340,6 +425,10 @@ public class VavrMatchersTest {
 		assertThat(descriptionOf(isFuture("F")), equalTo("is a Future, that succeeds, with value \"F\""));
 		assertThat(descriptionOf(isFuture("F").withTimeout(5, TimeUnit.SECONDS)),
 				equalTo("is a Future, that completes within 5 seconds, that succeeds, with value \"F\""));
+		assertThat(descriptionOf(isFuture(equalTo("F"))),
+				equalTo("is a Future, that succeeds, with value matching \"F\""));
+		assertThat(descriptionOf(isFuture(equalTo("F")).withTimeout(5, TimeUnit.SECONDS)),
+				equalTo("is a Future, that completes within 5 seconds, that succeeds, with value matching \"F\""));
 
 		assertThat(descriptionOf(isFuture().withTimeout(-1, TimeUnit.SECONDS)),
 				equalTo("is a Future, that succeeds"));
@@ -354,6 +443,8 @@ public class VavrMatchersTest {
 				equalTo("is a Future, that fails, with exception of type \"java.lang.IllegalStateException\""));
 		assertThat(descriptionOf(isFailedFuture(IllegalStateException.class).withMessage("Illegal State")),
 				equalTo("is a Future, that fails, with exception of type \"java.lang.IllegalStateException\" and message \"Illegal State\""));
+		assertThat(descriptionOf(isFailedFuture(instanceOf(IllegalStateException.class))),
+				equalTo("is a Future, that fails, with exception matching an instance of java.lang.IllegalStateException"));
 		assertThat(descriptionOf(VavrMatchers.<Integer>isFutureMatching("greater than 5", v -> v > 5)),
 				equalTo("is a Future, that succeeds, with value matching predicate \"greater than 5\""));
 
@@ -368,6 +459,7 @@ public class VavrMatchersTest {
 
 		assertThat(descriptionOf(isLazy()), equalTo("is a Lazy"));
 		assertThat(descriptionOf(isLazy("5")), equalTo("is a Lazy, which yields value \"5\""));
+		assertThat(descriptionOf(isLazy(equalTo("5"))), equalTo("is a Lazy, which yields value matching \"5\""));
 		assertThat(descriptionOf(isLazy().withTimeout(-1, TimeUnit.SECONDS)), equalTo("is a Lazy"));
 		assertThat(descriptionOf(isLazy().withTimeout(0, TimeUnit.SECONDS)), equalTo("is a Lazy"));
 		assertThat(descriptionOf(isLazy().withTimeout(1, TimeUnit.SECONDS)),
@@ -378,6 +470,12 @@ public class VavrMatchersTest {
 				equalTo("is a Lazy, which yields value \"5\""));
 		assertThat(descriptionOf(isLazy("5").withTimeout(1, TimeUnit.SECONDS)),
 				equalTo("is a Lazy, that completes within 1 seconds, which yields value \"5\""));
+		assertThat(descriptionOf(isLazy(equalTo("5")).withTimeout(-1, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, which yields value matching \"5\""));
+		assertThat(descriptionOf(isLazy(equalTo("5")).withTimeout(0, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, which yields value matching \"5\""));
+		assertThat(descriptionOf(isLazy(equalTo("5")).withTimeout(1, TimeUnit.SECONDS)),
+				equalTo("is a Lazy, that completes within 1 seconds, which yields value matching \"5\""));
 
 		assertThat(descriptionOf(isLazy().withTimeout(-1, TimeUnit.SECONDS)),
 				equalTo("is a Lazy"));

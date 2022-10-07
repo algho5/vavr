@@ -3,6 +3,7 @@ package com.jeroensteenbeeke.vavr.hamcrest;
 import io.vavr.concurrent.Future;
 import io.vavr.control.Option;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -250,6 +251,62 @@ public abstract class FutureMatcher<T, F extends FutureMatcher<T, F>> extends Ty
 	}
 
 	/**
+	 * Future Matcher that represents a failure by an expected exception type
+	 *
+	 * @param <T> The type of value returned by the future had it been a success
+	 */
+	public static class FailureMatching<T> extends FutureMatcher<T, FailureMatching<T>> {
+		private final Matcher<? extends Throwable> matcher;
+
+		FailureMatching(@NotNull Matcher<? extends Throwable> matcher) {
+			this(0L, null, matcher);
+		}
+
+		private FailureMatching(
+				long timeoutAmount, @Nullable TimeUnit timeoutUnit,
+				@NotNull Matcher<? extends Throwable> matcher) {
+			super(timeoutAmount, timeoutUnit);
+			this.matcher = matcher;
+		}
+
+		@Override
+		@NotNull
+		protected FailureMatching<T> newInstance(long timeoutAmount, @Nullable TimeUnit timeoutUnit) {
+			return new FailureMatching<>(timeoutAmount, timeoutUnit, matcher);
+		}
+
+		@Override
+		protected boolean matchesFutureSafely(
+				@NotNull Future<T> awaitedFuture, @NotNull Description mismatchDescription) {
+			if (awaitedFuture.isFailure()) {
+				describeFailure(awaitedFuture, mismatchDescription);
+
+				Option<Throwable> cause = awaitedFuture.getCause();
+				if (cause.isDefined()) {
+					Throwable throwable = cause.get();
+					if (matcher.matches(throwable)) {
+						return true;
+					}
+
+					mismatchDescription.appendText(", that fails, because ");
+					matcher.describeMismatch(throwable, mismatchDescription);
+				}
+			} else {
+				describeSuccess(awaitedFuture, mismatchDescription);
+			}
+
+			return false;
+		}
+
+		@Override
+		public void describeTo(@NotNull Description description) {
+			super.describeTo(description);
+			description.appendText(", that fails, with exception matching ");
+			matcher.describeTo(description);
+		}
+	}
+
+	/**
 	 * Future Matcher that matches a failed future that matches a given predicate
 	 * @param <T> The type of value returned by the future if it had succeeded
 	 */
@@ -397,6 +454,60 @@ public abstract class FutureMatcher<T, F extends FutureMatcher<T, F>> extends Ty
 			super.describeTo(description);
 			description.appendText(", that succeeds, with value ");
 			description.appendValue(expectedValue);
+		}
+	}
+
+	/**
+	 * Future Matcher that represents a success, whose value matches another matcher
+	 * @param <T> The type of value returned by the future
+	 */
+	public static class SuccessMatching<T> extends FutureMatcher<T, SuccessMatching<T>> {
+		private final Matcher<T> matcher;
+
+		SuccessMatching(@NotNull Matcher<T> matcher) {
+			this(0L, null, matcher);
+		}
+
+		private SuccessMatching(long timeoutAmount, @Nullable TimeUnit timeoutUnit, @NotNull Matcher<T> matcher) {
+			super(timeoutAmount, timeoutUnit);
+			this.matcher = matcher;
+		}
+
+		@Override
+		@NotNull
+		protected FutureMatcher.SuccessMatching<T> newInstance(long timeoutAmount, @Nullable TimeUnit timeoutUnit) {
+			return new SuccessMatching<>(timeoutAmount, timeoutUnit, matcher);
+		}
+
+		@Override
+		protected boolean matchesFutureSafely(
+				@NotNull Future<T> awaitedFuture, @NotNull Description mismatchDescription) {
+			if (awaitedFuture.isSuccess()) {
+
+				T actualValue = awaitedFuture.get();
+
+				if (matcher.matches(actualValue)) {
+					return true;
+				}
+
+				mismatchDescription.appendText(", that succeeds, with value ");
+				mismatchDescription.appendValue(actualValue);
+				mismatchDescription.appendText(" not matching because ");
+				matcher.describeMismatch(actualValue, mismatchDescription);
+
+			} else {
+				describeFailure(awaitedFuture, mismatchDescription);
+			}
+
+
+			return false;
+		}
+
+		@Override
+		public void describeTo(@NotNull Description description) {
+			super.describeTo(description);
+			description.appendText(", that succeeds, with value matching ");
+			matcher.describeTo(description);
 		}
 	}
 

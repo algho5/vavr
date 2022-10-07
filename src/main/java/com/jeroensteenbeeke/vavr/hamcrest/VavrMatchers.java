@@ -4,6 +4,7 @@ import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.jetbrains.annotations.NotNull;
@@ -105,6 +106,18 @@ public final class VavrMatchers {
 	}
 
 	/**
+	 * Matches an Option whose contents satisfy the given matcher
+	 *
+	 * @param matcher A Hamcrest matcher that should be satisfied
+	 * @param <T>     The type of value that should be in the Option
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> TypeSafeDiagnosingMatcher<Option<T>> isSome(@NotNull Matcher<T> matcher) {
+		return isDefinedOption(matcher);
+	}
+
+	/**
 	 * Matches an Option containing the given value
 	 *
 	 * @param value The value that should be contained in the Option
@@ -138,6 +151,42 @@ public final class VavrMatchers {
 	}
 
 	/**
+	 * Matches an Option whose contents satisfy the given matcher
+	 *
+	 * @param matcher A Hamcrest matcher that should be satisfied
+	 * @param <T>     The type of value that should be in the Option
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> TypeSafeDiagnosingMatcher<Option<T>> isDefinedOption(@NotNull Matcher<T> matcher) {
+		return new TypeSafeDiagnosingMatcher<Option<T>>() {
+			@Override
+			protected boolean matchesSafely(Option<T> subject, Description mismatchDescription) {
+				if (subject.isDefined()) {
+					T actualValue = subject.get();
+					if (matcher.matches(actualValue)) {
+						return true;
+					} else {
+						mismatchDescription.appendText("is an Option with value ").appendValue(actualValue)
+								.appendText(" not matching because ");
+						matcher.describeMismatch(actualValue, mismatchDescription);
+					}
+				} else {
+					mismatchDescription.appendText("is an empty Option");
+				}
+
+				return false;
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("is an Option with a value matching ");
+				matcher.describeTo(description);
+			}
+		};
+	}
+
+	/**
 	 * Matches an Option with a value matching the given Predicate
 	 *
 	 * @param predicateDescription Describes the predicate for user feedback
@@ -155,7 +204,8 @@ public final class VavrMatchers {
 					if (predicate.test(subject.get())) {
 						return true;
 					} else {
-						mismatchDescription.appendText("is an Option with a value not matching ").appendValue(predicateDescription)
+						mismatchDescription.appendText("is an Option with a value not matching ")
+								.appendValue(predicateDescription)
 								.appendText(", because the value is equal to ").appendValue(subject.get());
 					}
 				} else {
@@ -236,6 +286,43 @@ public final class VavrMatchers {
 	}
 
 	/**
+	 * Matches an Either that is a Left (error), with the given matcher
+	 *
+	 * @param matcher A matcher that the contents of the left should adhere to
+	 * @param <T>     The type contained in the Either
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> TypeSafeDiagnosingMatcher<Either<T, ?>> isLeft(@NotNull Matcher<T> matcher) {
+		return new TypeSafeDiagnosingMatcher<Either<T, ?>>() {
+			@Override
+			protected boolean matchesSafely(Either<T, ?> subject, Description mismatchDescription) {
+				if (subject.isLeft()) {
+					T actualValue = subject.getLeft();
+
+					if (matcher.matches(actualValue)) {
+						return true;
+					} else {
+						mismatchDescription.appendText("is a left Either, with value ").appendValue(actualValue)
+								.appendText(" not matching because ");
+						matcher.describeMismatch(actualValue, mismatchDescription);
+					}
+				} else {
+					mismatchDescription.appendText("is a right Either, with value ").appendValue(subject.get());
+				}
+
+				return false;
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("is a left Either, matching ");
+				matcher.describeTo(description);
+			}
+		};
+	}
+
+	/**
 	 * Matches a left Either with a value matching the given Predicate
 	 *
 	 * @param predicateDescription Describes the predicate for user feedback
@@ -256,7 +343,8 @@ public final class VavrMatchers {
 						return true;
 					} else {
 						mismatchDescription.appendText("is a left Either, with a value not matching ")
-								.appendValue(predicateDescription).appendText(", because the value is equal to ").appendValue(actualValue);
+								.appendValue(predicateDescription).appendText(", because the value is equal to ")
+								.appendValue(actualValue);
 					}
 				} else {
 					mismatchDescription.appendText("is a right Either, with value ").appendValue(subject.get());
@@ -333,6 +421,43 @@ public final class VavrMatchers {
 	}
 
 	/**
+	 * Matches an Either that is a Right (success), with the given matcher
+	 *
+	 * @param matcher The matcher that the contents should adhere to
+	 * @param <T>     The type contained in the Either
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> TypeSafeDiagnosingMatcher<Either<?, T>> isRight(@NotNull Matcher<T> matcher) {
+		return new TypeSafeDiagnosingMatcher<Either<?, T>>() {
+			@Override
+			protected boolean matchesSafely(Either<?, T> subject, Description mismatchDescription) {
+				if (subject.isRight()) {
+					T actualValue = subject.get();
+
+					if (matcher.matches(actualValue)) {
+						return true;
+					} else {
+						mismatchDescription.appendText("is a right Either, with value ").appendValue(actualValue)
+								.appendText(" not matching because ");
+						matcher.describeMismatch(actualValue, mismatchDescription);
+					}
+				} else {
+					mismatchDescription.appendText("is a left Either, with value ").appendValue(subject.getLeft());
+				}
+
+				return false;
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("is a right Either, matching ");
+				matcher.describeTo(description);
+			}
+		};
+	}
+
+	/**
 	 * Matches a right Either with a value matching the given Predicate
 	 *
 	 * @param predicateDescription Describes the predicate for user feedback
@@ -353,7 +478,8 @@ public final class VavrMatchers {
 						return true;
 					} else {
 						mismatchDescription.appendText("is a right Either, with a value not matching ")
-								.appendValue(predicateDescription).appendText(", because the value is equal to ").appendValue(actualValue);
+								.appendValue(predicateDescription).appendText(", because the value is equal to ")
+								.appendValue(actualValue);
 					}
 				} else {
 					mismatchDescription.appendText("is a left Either, with value ").appendValue(subject.getLeft());
@@ -401,9 +527,10 @@ public final class VavrMatchers {
 
 	/**
 	 * A matcher for Try that is a success, and contains the given value
+	 *
 	 * @param expectedValue The expected value
+	 * @param <T>           The type of expected value
 	 * @return A Hamcrest matcher
-	 * @param <T> The type of expected value
 	 */
 	@NotNull
 	public static <T> TypeSafeDiagnosingMatcher<Try<T>> isSuccess(@NotNull T expectedValue) {
@@ -435,14 +562,55 @@ public final class VavrMatchers {
 	}
 
 	/**
-	 * Matches a Try that is a success, whose value matches the given predicate
-	 * @param predicateDescription Describes the predicate for user feedback
-	 * @param predicate            The predicate to match
+	 * A matcher for Try that is a success, whose contents match the given matcher
+	 *
+	 * @param matcher The matcher that the contents should adhere to
+	 * @param <T>     The type of expected value
 	 * @return A Hamcrest matcher
-	 * @param <T> The type of value in the try
 	 */
 	@NotNull
-	public static <T> TypeSafeDiagnosingMatcher<Try<T>> isSuccess(@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
+	public static <T> TypeSafeDiagnosingMatcher<Try<T>> isSuccess(@NotNull Matcher<T> matcher) {
+		return new TypeSafeDiagnosingMatcher<Try<T>>() {
+			@Override
+			protected boolean matchesSafely(Try<T> subject, Description mismatchDescription) {
+				if (subject.isSuccess()) {
+					T actualValue = subject.get();
+
+					if (matcher.matches(actualValue)) {
+						return true;
+					}
+
+					mismatchDescription.appendText("is a success, with value ")
+							.appendValue(actualValue)
+							.appendText(" not matching because ");
+					matcher.describeMismatch(actualValue, mismatchDescription);
+				} else {
+					mismatchDescription.appendText("is a failure, with exception of type ")
+							.appendValue(subject.getCause().getClass());
+				}
+
+				return false;
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("is a success, matching ");
+				matcher.describeTo(description);
+			}
+		};
+	}
+
+	/**
+	 * Matches a Try that is a success, whose value matches the given predicate
+	 *
+	 * @param predicateDescription Describes the predicate for user feedback
+	 * @param predicate            The predicate to match
+	 * @param <T>                  The type of value in the try
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> TypeSafeDiagnosingMatcher<Try<T>> isSuccess(
+			@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
 		return new TypeSafeDiagnosingMatcher<Try<T>>() {
 			@Override
 			protected boolean matchesSafely(Try<T> subject, Description mismatchDescription) {
@@ -453,7 +621,8 @@ public final class VavrMatchers {
 						return true;
 					}
 
-					mismatchDescription.appendText("is a success, which does not match ").appendValue(predicateDescription).appendText(", because the value is equal to ")
+					mismatchDescription.appendText("is a success, which does not match ")
+							.appendValue(predicateDescription).appendText(", because the value is equal to ")
 							.appendValue(actualValue);
 				} else {
 					mismatchDescription.appendText("is a failure, with exception of type ")
@@ -499,9 +668,10 @@ public final class VavrMatchers {
 
 	/**
 	 * Matches a Try that is a failure, containing the given exception
+	 *
 	 * @param expectedClass The class of the exception contained in the Try
+	 * @param <T>           The type of Throwable
 	 * @return A Hamcrest matcher
-	 * @param <T> The type of Throwable
 	 */
 	@NotNull
 	public static <T extends Throwable> TypeSafeDiagnosingMatcher<Try<?>> isFailure(@NotNull Class<T> expectedClass) {
@@ -515,7 +685,8 @@ public final class VavrMatchers {
 					if (expectedClass.isAssignableFrom(actualClass)) {
 						return true;
 					} else {
-						mismatchDescription.appendText("is a failure, with exception of type ").appendValue(actualClass.getName());
+						mismatchDescription.appendText("is a failure, with exception of type ")
+								.appendValue(actualClass.getName());
 					}
 				} else {
 					mismatchDescription.appendText("is a success, with value ")
@@ -533,13 +704,54 @@ public final class VavrMatchers {
 	}
 
 	/**
+	 * Matches a Try that is a failure, containing the given exception
+	 *
+	 * @param matcher A matcher the throwable should adhere to
+	 * @param <T>     The type of Throwable
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T extends Throwable> TypeSafeDiagnosingMatcher<Try<?>> isFailure(@NotNull Matcher<T> matcher) {
+		return new TypeSafeDiagnosingMatcher<Try<?>>() {
+			@Override
+			protected boolean matchesSafely(Try<?> subject, Description mismatchDescription) {
+				if (subject.isFailure()) {
+					Throwable actualValue = subject.getCause();
+
+					if (matcher.matches(actualValue)) {
+						return true;
+					} else {
+						mismatchDescription.appendText("is a failure, with exception of type ")
+								.appendValue(actualValue.getClass().getName())
+								.appendText(" not matching because ");
+						matcher.describeMismatch(actualValue, mismatchDescription);
+					}
+				} else {
+					mismatchDescription.appendText("is a success, with value ")
+							.appendValue(subject.get());
+				}
+
+				return false;
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("is a failure, matching ");
+				matcher.describeTo(description);
+			}
+		};
+	}
+
+	/**
 	 * Matches a try that is a failure, the contained throwable of which matches the given predicate
+	 *
 	 * @param predicateDescription The description of the predicate
-	 * @param predicate The predicate
+	 * @param predicate            The predicate
 	 * @return A HamCrest matcher
 	 */
 	@NotNull
-	public static TypeSafeDiagnosingMatcher<Try<?>> isFailure(@NotNull String predicateDescription, @NotNull Predicate<Throwable> predicate) {
+	public static TypeSafeDiagnosingMatcher<Try<?>> isFailure(
+			@NotNull String predicateDescription, @NotNull Predicate<Throwable> predicate) {
 		return new TypeSafeDiagnosingMatcher<Try<?>>() {
 			@Override
 			protected boolean matchesSafely(Try<?> subject, Description mismatchDescription) {
@@ -550,7 +762,8 @@ public final class VavrMatchers {
 					if (predicate.test(actualValue)) {
 						return true;
 					} else {
-						mismatchDescription.appendText("is a failure, not matching ").appendValue(predicateDescription).appendText(", and exception ").appendValue(actualClass.getName());
+						mismatchDescription.appendText("is a failure, not matching ").appendValue(predicateDescription)
+								.appendText(", and exception ").appendValue(actualClass.getName());
 					}
 				} else {
 					mismatchDescription.appendText("is a success, with value ")
@@ -573,68 +786,102 @@ public final class VavrMatchers {
 
 	/**
 	 * Matches a future with any value
-	 * @return A matcher
+	 *
 	 * @param <T> The type of object returned by the future
+	 * @return A matcher
 	 */
 	@NotNull
-	public static <T> FutureMatcher<T,?> isFuture() {
+	public static <T> FutureMatcher<T, ?> isFuture() {
 		return new FutureMatcher.Success<>();
 	}
 
 	/**
 	 * Matches a future with the given value
+	 *
 	 * @param expectedValue The expected value
+	 * @param <T>           The type of object returned by the future
 	 * @return A matcher
-	 * @param <T> The type of object returned by the future
 	 */
 	@NotNull
-	public static <T> FutureMatcher<T,?> isFuture(@NotNull T expectedValue) {
+	public static <T> FutureMatcher<T, ?> isFuture(@NotNull T expectedValue) {
 		return new FutureMatcher.SuccessWithValue<>(expectedValue);
 	}
 
 	/**
-	 * Matches a future whose result matches the given predicate
-	 * @param predicateDescription A human-readable description of the predicate
-	 * @param predicate The predicate
-	 * @return A Hamcrest matcher
-	 * @param <T> The type of value returned by the future
+	 * Matches a future whose result matches a given matcher
+	 *
+	 * @param matcher The matcher the result should adhere to
+	 * @param <T>           The type of object returned by the future
+	 * @return A matcher
 	 */
 	@NotNull
-	public static <T> FutureMatcher<T,?> isFutureMatching(@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
+	public static <T> FutureMatcher<T, ?> isFuture(@NotNull Matcher<T> matcher) {
+		return new FutureMatcher.SuccessMatching<>(matcher);
+	}
+
+	/**
+	 * Matches a future whose result matches the given predicate
+	 *
+	 * @param predicateDescription A human-readable description of the predicate
+	 * @param predicate            The predicate
+	 * @param <T>                  The type of value returned by the future
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> FutureMatcher<T, ?> isFutureMatching(
+			@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
 		return new FutureMatcher.SuccessMatchingPredicate<>(predicateDescription, predicate);
 	}
 
 	/**
 	 * Matches a Future that fails
-	 * @return A Hamcrest matcher
+	 *
 	 * @param <T> The type of value that would be returned by the future if it succeeded instead
+	 * @return A Hamcrest matcher
 	 */
 	@NotNull
-	public static <T> FutureMatcher<T,?> isFailedFuture() {
+	public static <T> FutureMatcher<T, ?> isFailedFuture() {
 		return new FutureMatcher.Failure<>();
 
 	}
 
 	/**
 	 * Matches a Future that fails, due to the given exception type
+	 *
 	 * @param expectedException The exception that we expect to cause the future to fail
+	 * @param <T>               The type of value that would be returned by the future if it succeeded instead
 	 * @return A Hamcrest matcher
-	 * @param <T> The type of value that would be returned by the future if it succeeded instead
 	 */
 	@NotNull
-	public static <T> FutureMatcher.FailureOfType<T> isFailedFuture(@NotNull Class<? extends Throwable> expectedException) {
+	public static <T> FutureMatcher.FailureOfType<T> isFailedFuture(
+			@NotNull Class<? extends Throwable> expectedException) {
 		return new FutureMatcher.FailureOfType<>(expectedException);
 	}
 
 	/**
-	 * Matches a Future that fails, due to an exception matching the given predicate
-	 * @param predicateDescription A human-readable description of the predicate
-	 * @param throwablePredicate The predicate
+	 * Matches a Future that fails, due to the given exception type
+	 *
+	 * @param matcher The matcher the exception should adhere to
+	 * @param <T>               The type of value that would be returned by the future if it succeeded instead
 	 * @return A Hamcrest matcher
-	 * @param <T> The type of value that would have been returned by the Future if it had succeeded
 	 */
 	@NotNull
-	public static <T> FutureMatcher.FailureMatchingPredicate<T> isFailedFutureMatching(@NotNull String predicateDescription, @NotNull Predicate<Throwable> throwablePredicate) {
+	public static <T> FutureMatcher.FailureMatching<T> isFailedFuture(
+			@NotNull Matcher<? extends Throwable> matcher) {
+		return new FutureMatcher.FailureMatching<>(matcher);
+	}
+
+	/**
+	 * Matches a Future that fails, due to an exception matching the given predicate
+	 *
+	 * @param predicateDescription A human-readable description of the predicate
+	 * @param throwablePredicate   The predicate
+	 * @param <T>                  The type of value that would have been returned by the Future if it had succeeded
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> FutureMatcher.FailureMatchingPredicate<T> isFailedFutureMatching(
+			@NotNull String predicateDescription, @NotNull Predicate<Throwable> throwablePredicate) {
 		return new FutureMatcher.FailureMatchingPredicate<>(predicateDescription, throwablePredicate);
 	}
 
@@ -644,35 +891,50 @@ public final class VavrMatchers {
 
 	/**
 	 * Matches a Lazy that yields any value
-	 * @return A Hamcrest matcher
+	 *
 	 * @param <T> The type of value returned by the lazy
+	 * @return A Hamcrest matcher
 	 */
 	@NotNull
-	public static <T> LazyMatcher<T,?> isLazy() {
+	public static <T> LazyMatcher<T, ?> isLazy() {
 		return new LazyMatcher.Bare<>();
 	}
 
 	/**
 	 * Matches a Lazy that yields any value
+	 *
 	 * @param expectedValue The value the Lazy should yield
+	 * @param <T>           The type of value returned by the lazy
 	 * @return A Hamcrest matcher
-	 * @param <T> The type of value returned by the lazy
 	 */
 	@NotNull
-	public static <T> LazyMatcher<T,?> isLazy(@NotNull T expectedValue) {
+	public static <T> LazyMatcher<T, ?> isLazy(@NotNull T expectedValue) {
 		return new LazyMatcher.Valued<>(expectedValue);
 	}
 
+	/**
+	 * Matches a Lazy that yields any value
+	 *
+	 * @param matcher The matcher the lazily calculated value should adhere to
+	 * @param <T>           The type of value returned by the lazy
+	 * @return A Hamcrest matcher
+	 */
+	@NotNull
+	public static <T> LazyMatcher<T, ?> isLazy(@NotNull Matcher<T> matcher) {
+		return new LazyMatcher.Matching<>(matcher);
+	}
 
 	/**
 	 * Matches a Lazy whose result matches the given predicate
+	 *
 	 * @param predicateDescription A human-readable description of the predicate
-	 * @param predicate The predicate
+	 * @param predicate            The predicate
+	 * @param <T>                  The type of value returned by the Lazy
 	 * @return A Hamcrest matcher
-	 * @param <T> The type of value returned by the Lazy
 	 */
 	@NotNull
-	public static <T> LazyMatcher<T,?> isLazyMatching(@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
+	public static <T> LazyMatcher<T, ?> isLazyMatching(
+			@NotNull String predicateDescription, @NotNull Predicate<T> predicate) {
 		return new LazyMatcher.MatchingPredicate<>(predicateDescription, predicate);
 	}
 
